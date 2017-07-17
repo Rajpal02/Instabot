@@ -238,14 +238,10 @@ def search_by_tag():
                             print "No data present"
                     else:
                         "Some error occurred"
-            print x
-            query = raw_input("Do you want to plot the data on pie chart? (Y/N): ")
+            query = raw_input("Do you want to plot the data on worldcloud? (Y/N): ")
             if query.upper() == 'Y':
-                wordcloud = WordCloud(
-                                      relative_scaling=1.0,
-                                      stopwords=None
-                                      ).generate_from_frequencies(x)
-                plt.imshow(wordcloud)
+                wordcloud = WordCloud().generate_from_frequencies(x)
+                plt.imshow(wordcloud,interpolation="bilinear")
                 plt.axis("off")
                 plt.show()
             else:
