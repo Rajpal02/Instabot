@@ -1,21 +1,31 @@
+#importing libraries
+#requests is a http library
 import requests
+#urllib is for retreiving data of particulat url
 import urllib
+#textblob for processing textual data . also for NLP
 from textblob import TextBlob
 from textblob.sentiments import NaiveBayesAnalyzer
+#matplot for plotting data graphically
 import matplotlib.pyplot as plt
 import numpy as np
+#wordcloud is forming cloud of words
 from wordcloud import WordCloud, STOPWORDS
 from os import path
 from random import Random
 
-
+#Access token retrieved on instagram developer's site
 Access_Token = "1464437497.eae116d.b211e96a32954ee18bacb63fc6e6498b"
 Base_URL = "https://api.instagram.com/v1/"
+
+#function to access information about user through username
 def user_info(user):
+    #endpoints of user from insta developer's  site
     request_url = "%susers/%s/?access_token=%s" %(Base_URL,user,Access_Token)
     print "Get request URL : %s" %(request_url)
     user_info = requests.get(request_url).json()
 
+    #retrieving data
     if user_info["meta"]["code"] == 200:
         if len(user_info["data"]):
             print "Username : %s" %(user_info["data"]["username"])
@@ -29,6 +39,7 @@ def user_info(user):
     else:
         print "Some error occurred"
 
+#returning user-id to perform func on user
 def get_user_id(name):
     request_url = "%susers/search?q=%s&access_token=%s" %(Base_URL,name,Access_Token)
     print "Get request URL of client : %s" %(request_url)
@@ -43,6 +54,7 @@ def get_user_id(name):
         print "Some error occurred"
     return None
 
+#returning post-id to performing func on post(like,comment)
 def get_post_id(user):
     request_url = "%susers/%s/media/recent/?access_token=%s" %(Base_URL,user,Access_Token)
     print "Get request URL : %s" %(request_url)
@@ -52,7 +64,7 @@ def get_post_id(user):
         if len(client_post["data"]):
             for i in range(len(client_post["data"])):
                 print str(i+1) + ") " + client_post["data"][i]["id"]
-
+            print "recent post media is in ascending order"
             take_id = raw_input("enter the id:")
             if len(take_id):
                 take_id = int(take_id)
@@ -63,6 +75,7 @@ def get_post_id(user):
         print "Some error occurred"
     return  None
 
+#downloading media
 def get_image():
     request_url = "%susers/%s/media/recent/?access_token=%s" % (Base_URL, user, Access_Token)
     print "Get request URL : %s" % (request_url)
@@ -75,6 +88,7 @@ def get_image():
                 image_url = client_image["data"][i]["images"]["standard_resolution"]["url"]
                 urllib.urlretrieve(image_url,image_name)
 
+#getting image url
 def get_image_url():
     request_url = "%susers/%s/media/recent/?access_token=%s" % (Base_URL, user, Access_Token)
     print "Get request URL : %s" % (request_url)
@@ -92,6 +106,7 @@ def get_image_url():
         else:
             print "Enter valid input"
 
+#liking media
 def like_a_post(media_id):
     request_url = "%smedia/%s/likes" %(Base_URL,media_id)
     print "Get request URL : %s" %(request_url)
@@ -102,6 +117,7 @@ def like_a_post(media_id):
     else:
         print "Some error occurred"
 
+#list of likes
 def list_of_likes(media_id):
     request_url = "%smedia/%s/likes?access_token=%s" %(Base_URL,media_id,Access_Token)
     print "Get request URL : %s" %(request_url)
@@ -116,6 +132,7 @@ def list_of_likes(media_id):
     else:
         print "Some error occurred!"
 
+#func to remove a like
 def remove_a_like(media_id):
     request_url = "%smedia/%s/likes?access_token=%s" %(Base_URL,media_id,Access_Token)
     print "Get request URL : %s" %(request_url)
@@ -126,6 +143,7 @@ def remove_a_like(media_id):
     else:
         print "Some error occurred"
 
+#func to comment on a post
 def comment_a_post(media_id):
     request_url = "%smedia/%s/comments" %(Base_URL,media_id)
     print "Get request URL : %s" %(request_url)
@@ -138,6 +156,7 @@ def comment_a_post(media_id):
     else:
         print "Some error occurred"
 
+#func to display comments
 def list_of_comments(media_id):
     request_url = "%smedia/%s/comments?access_token=%s" %(Base_URL,media_id,Access_Token)
     print "Get request URL : %s" %(request_url)
@@ -152,6 +171,7 @@ def list_of_comments(media_id):
     else:
         print "Some error occurred!"
 
+#select comment id
 def select_comment_id(media_id):
     list = requests.get(Base_URL+"media/"+media_id+"/comments?access_token="+Access_Token).json()
     if list["meta"]["code"]==200:
@@ -172,6 +192,7 @@ def select_comment_id(media_id):
     else:
         print "Some error occurred!"
 
+#delete comment by retrieving comment-id
 def delete_a_comment(media_id):
     comment_id = select_comment_id(media_id)
     request_url="%smedia/%s/comments/%s?access_token=%s" %(Base_URL,media_id,comment_id,Access_Token)
@@ -182,6 +203,7 @@ def delete_a_comment(media_id):
     else:
         print "Some error occurred"
 
+#delete negative comment func
 def delete_negative_comments(media_id):
     request_url = "%smedia/%s/comments?access_token=%s" % (Base_URL, media_id, Access_Token)
     print "Get request URL : %s" % (request_url)
@@ -192,6 +214,7 @@ def delete_negative_comments(media_id):
             pos=0
             neg=0
             for i in range(len(list_of_comments["data"])):
+                #analysing comments
                 blob = TextBlob(list_of_comments["data"][i]["text"],analyzer=NaiveBayesAnalyzer())
                 if blob.sentiment.classification == "neg":
                     neg=+1
@@ -207,6 +230,7 @@ def delete_negative_comments(media_id):
                     pos=+1
             query = raw_input("Do you want to plot the data on pie chart? (Y/N): ")
             if query.upper()=='Y':
+                #plotting pie chart
                 labels = "Positive" , "Negative"
                 sizes = [pos,neg]
                 explode = (0,0.5)
@@ -219,6 +243,7 @@ def delete_negative_comments(media_id):
     else:
         print "Some error occurred!"
 
+#searching tags
 def search_by_tag():
     tag = raw_input("Enter your tag by which you want to search: ")
     request_url ="%stags/%s/media/recent?access_token=%s" %(Base_URL,tag,Access_Token)
@@ -229,6 +254,7 @@ def search_by_tag():
             x={}
             for i in range(len(list["data"])):
                 for j in range(len(list["data"][i]["tags"])):
+                    #searching sub-trends for given trends
                     url="%stags/%s?access_token=%s" %(Base_URL,list["data"][i]["tags"][j],Access_Token)
                     list1=requests.get(url).json()
                     if list1["meta"]["code"]==200:
@@ -240,6 +266,7 @@ def search_by_tag():
                         "Some error occurred"
             query = raw_input("Do you want to plot the data on worldcloud? (Y/N): ")
             if query.upper() == 'Y':
+                #using word-cloud
                 wordcloud = WordCloud().generate_from_frequencies(x)
                 plt.imshow(wordcloud,interpolation="bilinear")
                 plt.axis("off")
@@ -247,7 +274,7 @@ def search_by_tag():
             else:
                 exit()
 
-
+#selecting any user or self
 def select_user(q):
     if q.upper() == 'Y':
         user = "self"
